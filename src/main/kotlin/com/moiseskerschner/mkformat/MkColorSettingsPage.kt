@@ -20,7 +20,7 @@ class MkColorSettingsPage : ColorSettingsPage {
     )
 
     override fun getDisplayName(): String = "mk-format"
-    override fun getIcon(): Icon? = null
+    override fun getIcon(): Icon = MkFileType.getIcon()
     override fun getHighlighter(): SyntaxHighlighter = MkSyntaxHighlighter()
 
     override fun getDemoText(): String = """
