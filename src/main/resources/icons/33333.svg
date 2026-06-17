@@ -1,0 +1,50 @@
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <!-- document -->
+  <path d="M2.5 1H9L13.5 5.5V14.5H2.5Z"
+        fill="none"
+        stroke="#999999"
+        stroke-width="1"/>
+
+  <!-- folded corner -->
+  <path d="M9 1V5.5H13.5"
+        fill="none"
+        stroke="#999999"
+        stroke-width="1"/>
+
+  <!-- hierarchy connectors -->
+  <path d="M4 4.5V6H5"
+        fill="none"
+        stroke="#555555"
+        stroke-width="0.6"
+        stroke-linecap="round"/>
+
+  <path d="M5 6V8H6"
+        fill="none"
+        stroke="#555555"
+        stroke-width="0.6"
+        stroke-linecap="round"/>
+
+  <path d="M6 8V10H7"
+        fill="none"
+        stroke="#555555"
+        stroke-width="0.6"
+        stroke-linecap="round"/>
+
+  <!-- bullets -->
+  <circle cx="4" cy="4.5" r="0.55" fill="#FF9E64"/>
+  <circle cx="5" cy="6" r="0.55" fill="#7DCFFF"/>
+  <circle cx="6" cy="8" r="0.55" fill="#9ECE6A"/>
+
+  <!-- lines -->
+  <rect x="5" y="4.1" width="4.5" height="0.8" rx="0.4" fill="#FF9E64"/>
+  <rect x="6" y="5.6" width="4" height="0.8" rx="0.4" fill="#7DCFFF"/>
+  <rect x="7" y="7.6" width="3.5" height="0.8" rx="0.4" fill="#9ECE6A"/>
+
+  <!-- mk -->
+  <text x="8" y="13.2"
+        font-size="3"
+        font-family="Arial, sans-serif"
+        font-weight="bold"
+        text-anchor="middle"
+        fill="#FF9E64">mk</text>
+</svg>
