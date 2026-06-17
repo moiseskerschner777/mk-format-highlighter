@@ -1,0 +1,21 @@
+<idea-plugin>
+    <id>com.moiseskerschner.mkformat</id>
+    <name>mk-format Highlighter</name>
+    <vendor>Moises Kerschner</vendor>
+    <description>Depth-colored syntax highlighting for mk-format (.mk) outline files, matching the mk-editor artifact's palette out of the box.</description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <fileType
+            name="mk-format"
+            implementationClass="com.moiseskerschner.mkformat.MkFileType"
+            fieldName="INSTANCE"
+            language="mk-format"
+            extensions="mk"/>
+        <lang.syntaxHighlighterFactory
+            language="mk-format"
+            implementationClass="com.moiseskerschner.mkformat.MkSyntaxHighlighterFactory"/>
+        <colorSettingsPage implementation="com.moiseskerschner.mkformat.MkColorSettingsPage"/>
+    </extensions>
+</idea-plugin>
