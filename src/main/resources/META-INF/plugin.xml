@@ -17,5 +17,8 @@
             language="mk-format"
             implementationClass="com.moiseskerschner.mkformat.MkSyntaxHighlighterFactory"/>
         <colorSettingsPage implementation="com.moiseskerschner.mkformat.MkColorSettingsPage"/>
+        <lang.psiStructureViewFactory
+            language="mk-format"
+            implementationClass="com.moiseskerschner.mkformat.MkStructureViewFactory"/>
     </extensions>
 </idea-plugin>
