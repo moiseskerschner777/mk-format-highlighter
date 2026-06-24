@@ -20,5 +20,8 @@
         <lang.psiStructureViewFactory
             language="mk-format"
             implementationClass="com.moiseskerschner.mkformat.MkStructureViewFactory"/>
+        <lang.parserDefinition
+            language="mk-format"
+            implementationClass="com.moiseskerschner.mkformat.MkParserDefinition"/>
     </extensions>
 </idea-plugin>

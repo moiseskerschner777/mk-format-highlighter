@@ -2,17 +2,18 @@ package com.moiseskerschner.mkformat
 
 import com.intellij.ide.structureView.StructureViewModelBase
 import com.intellij.ide.structureView.StructureViewTreeElement
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.psi.PsiFile
 
-class MkStructureViewTreeModel(private val psiFile: PsiFile) : StructureViewModelBase(psiFile, buildRoot(psiFile)) {
+class MkStructureViewTreeModel(psiFile: PsiFile, editor: Editor?) : StructureViewModelBase(psiFile, editor, buildRoot(psiFile)) {
 
     override fun getSuitableClasses() = arrayOf(PsiFile::class.java)
 
     override fun getCurrentEditorElement(): Any? {
-        val editor = FileEditorManager.getInstance(psiFile.project).selectedTextEditor ?: return null
+        val current = FileEditorManager.getInstance(psiFile.project).selectedTextEditor ?: return null
         val root = getRoot() as? MkStructureViewElement ?: return null
-        val caretOffset = editor.caretModel.offset
+        val caretOffset = current.caretModel.offset
         return findElementAtOffset(root, caretOffset)
     }
 

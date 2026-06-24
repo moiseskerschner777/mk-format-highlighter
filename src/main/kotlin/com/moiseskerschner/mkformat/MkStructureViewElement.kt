@@ -16,7 +16,7 @@ class MkStructureViewElement(
     val children: MutableList<MkStructureViewElement>
 ) : StructureViewTreeElement, ItemPresentation, Navigatable {
 
-    override fun getValue(): Any = psiFile
+    override fun getValue(): Any = this
 
     override fun getChildren(): Array<TreeElement> = children.toTypedArray()
 
