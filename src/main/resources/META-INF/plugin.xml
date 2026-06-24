@@ -23,5 +23,8 @@
         <lang.parserDefinition
             language="mk-format"
             implementationClass="com.moiseskerschner.mkformat.MkParserDefinition"/>
+        <lang.foldingBuilder
+            language="mk-format"
+            implementationClass="com.moiseskerschner.mkformat.MkFoldingBuilder"/>
     </extensions>
 </idea-plugin>
