@@ -2,11 +2,39 @@ package com.moiseskerschner.mkformat
 
 import com.intellij.ide.structureView.StructureViewModelBase
 import com.intellij.ide.structureView.StructureViewTreeElement
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.psi.PsiFile
 
-class MkStructureViewTreeModel(psiFile: PsiFile) : StructureViewModelBase(psiFile, buildRoot(psiFile)) {
+class MkStructureViewTreeModel(private val psiFile: PsiFile) : StructureViewModelBase(psiFile, buildRoot(psiFile)) {
 
     override fun getSuitableClasses() = arrayOf(PsiFile::class.java)
+
+    override fun getCurrentEditorElement(): Any? {
+        val editor = FileEditorManager.getInstance(psiFile.project).selectedTextEditor ?: return null
+        val root = getRoot() as? MkStructureViewElement ?: return null
+        val caretOffset = editor.caretModel.offset
+        return findElementAtOffset(root, caretOffset)
+    }
+
+    private fun findElementAtOffset(element: MkStructureViewElement, caretOffset: Int): MkStructureViewElement? {
+        var best: MkStructureViewElement? = null
+        val stack = ArrayDeque<MkStructureViewElement>()
+        stack.addLast(element)
+        while (stack.isNotEmpty()) {
+            val current = stack.removeLast()
+            if (current.offset <= caretOffset) {
+                if (best == null || current.offset > best.offset) {
+                    best = current
+                }
+            }
+            for (child in current.children.asReversed()) {
+                if (child.offset <= caretOffset) {
+                    stack.addLast(child)
+                }
+            }
+        }
+        return best
+    }
 }
 
 private fun buildRoot(psiFile: PsiFile): MkStructureViewElement {
