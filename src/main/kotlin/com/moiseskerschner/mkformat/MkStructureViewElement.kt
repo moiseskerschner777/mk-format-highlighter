@@ -13,7 +13,7 @@ class MkStructureViewElement(
     val depth: Int,
     val offset: Int,
     val psiFile: PsiFile,
-    val children: List<MkStructureViewElement>
+    val children: MutableList<MkStructureViewElement>
 ) : StructureViewTreeElement, ItemPresentation, Navigatable {
 
     override fun getValue(): Any = psiFile
