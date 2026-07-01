@@ -8,6 +8,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.psi.PsiDocumentManager
+import com.intellij.ui.EditorNotifications
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBTextField
 import com.intellij.util.ui.JBUI
@@ -67,6 +68,7 @@ class AddCommentInlineAction : AnAction() {
                                 if (psiFile != null) {
                                     DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
                                 }
+                                EditorNotifications.getInstance(project).updateAllNotifications()
                             }
                         }
                         popup.cancel()

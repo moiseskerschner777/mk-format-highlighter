@@ -29,6 +29,8 @@
         <codeInsight.lineMarkerProvider
             language="mk-format"
             implementationClass="com.moiseskerschner.mkformat.comments.MkCommentGutterProvider"/>
+        <editorNotificationProvider
+            implementation="com.moiseskerschner.mkformat.comments.MkCommentBarProvider"/>
     </extensions>
 
     <actions>
