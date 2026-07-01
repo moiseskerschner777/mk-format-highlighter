@@ -1,15 +1,14 @@
 package com.moiseskerschner.mkformat
 
 import com.intellij.lang.ASTNode
-import com.intellij.lang.folding.FoldingBuilderEx
+import com.intellij.lang.folding.FoldingBuilder
 import com.intellij.lang.folding.FoldingDescriptor
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.util.TextRange
-import com.intellij.psi.PsiElement
 
-class MkFoldingBuilder : FoldingBuilderEx() {
+class MkFoldingBuilder : FoldingBuilder {
 
-    override fun buildFoldRegions(root: PsiElement, document: Document, quick: Boolean): Array<FoldingDescriptor> {
+    override fun buildFoldRegions(root: ASTNode, document: Document): Array<FoldingDescriptor> {
         val text = document.text
         val lines = text.split('\n').toTypedArray()
         if (lines.isEmpty()) return emptyArray()
@@ -30,7 +29,6 @@ class MkFoldingBuilder : FoldingBuilderEx() {
 
             val currentDepth = (line.length - line.trimStart().length) / 4
 
-            // scan forward: skip blanks, stop at terminator (depth <= currentDepth)
             var endLine = i
             var hasNonBlankChild = false
             for (j in i + 1 until lines.size) {
@@ -44,14 +42,25 @@ class MkFoldingBuilder : FoldingBuilderEx() {
 
             if (hasNonBlankChild) {
                 val endOffset = lineStarts[endLine] + lines[endLine].length
-                val startOffset = lineStarts[i]
+                val startOffset = lineStarts[i] + lines[i].length
+                val anchor = findAnchorNode(root, lineStarts[i])
                 descriptors.add(
-                    FoldingDescriptor(root.node, TextRange(startOffset, endOffset))
+                    FoldingDescriptor(anchor, TextRange(startOffset, endOffset))
                 )
             }
         }
 
         return descriptors.toTypedArray()
+    }
+
+    private fun findAnchorNode(root: ASTNode, offset: Int): ASTNode {
+        var child = root.firstChildNode
+        while (child != null) {
+            val range = child.textRange
+            if (range.startOffset <= offset && offset < range.endOffset) return child
+            child = child.treeNext
+        }
+        return root
     }
 
     override fun getPlaceholderText(node: ASTNode): String = "..."
