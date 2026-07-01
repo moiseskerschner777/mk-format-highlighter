@@ -4,6 +4,7 @@ project overview:
         native IntelliJ plugin for .mk files
         depth-based syntax highlighting
         isolated color settings page
+
         status:
             base plugin scaffolded and functional
             structure view in progress
@@ -26,7 +27,7 @@ project overview:
             counts leading spaces
             depth = min(leadingSpaces / 4, 6)
             flags colon-ending lines as parents
-        MkColors
+        MkColors:
             8 TextAttributesKeys
             depth colors baked in as defaults
             PARENT_BOLD key
