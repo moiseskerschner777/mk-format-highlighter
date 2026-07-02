@@ -14,10 +14,10 @@ import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBTextArea
 import com.intellij.util.ui.JBUI
 import com.moiseskerschner.mkformat.MkFileType
-import java.awt.BorderLayout
 import java.awt.Dimension
+import java.awt.KeyboardFocusManager
+import java.awt.KeyEventDispatcher
 import java.awt.datatransfer.StringSelection
-import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 import javax.swing.JPanel
 import javax.swing.JScrollPane
@@ -61,34 +61,42 @@ class AddCommentInlineAction : AnAction() {
             .setCancelOnClickOutside(false)
             .createPopup()
 
-        textArea.addKeyListener(object : KeyAdapter() {
-            override fun keyPressed(e: KeyEvent) {
-                if (e.keyCode == KeyEvent.VK_ENTER && !e.isShiftDown) {
-                    e.consume()
-                    val request = textArea.text
-                    if (request.isNotBlank()) {
-                        val manager = MkCommentManager.getInstance(editor.document)
-                        val comment = manager.addComment(editor, request)
-                        logger.info("line ${comment.lineNumber}: \"${comment.snippet}\" — ${comment.request}")
-                        if (vFile != null) {
-                            val formatted = MkCommentFormatter.format(vFile.name, manager.getComments())
-                            CopyPasteManager.getInstance().setContents(StringSelection(formatted))
-                        }
-                        val project = editor.project
-                        if (project != null) {
-                            val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
-                            if (psiFile != null) {
-                                DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
-                            }
-                            EditorNotifications.getInstance(project).updateAllNotifications()
-                        }
-                    }
-                    popup.cancel()
-                } else if (e.keyCode == KeyEvent.VK_ESCAPE) {
-                    popup.cancel()
+        val dispatcher = KeyEventDispatcher { event ->
+            if (event.id == KeyEvent.KEY_PRESSED && event.keyCode == KeyEvent.VK_ENTER) {
+                if (event.isShiftDown) {
+                    textArea.replaceSelection("\n")
+                    return@KeyEventDispatcher true
                 }
+                val request = textArea.text
+                if (request.isNotBlank()) {
+                    val manager = MkCommentManager.getInstance(editor.document)
+                    val comment = manager.addComment(editor, request)
+                    logger.info("line ${comment.lineNumber}: \"${comment.snippet}\" — ${comment.request}")
+                    if (vFile != null) {
+                        val formatted = MkCommentFormatter.format(vFile.name, manager.getComments())
+                        CopyPasteManager.getInstance().setContents(StringSelection(formatted))
+                    }
+                    val project = editor.project
+                    if (project != null) {
+                        val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
+                        if (psiFile != null) {
+                            DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
+                        }
+                        EditorNotifications.getInstance(project).updateAllNotifications()
+                    }
+                }
+                popup.cancel()
+                return@KeyEventDispatcher true
             }
-        })
+            if (event.id == KeyEvent.KEY_PRESSED && event.keyCode == KeyEvent.VK_ESCAPE) {
+                popup.cancel()
+                return@KeyEventDispatcher true
+            }
+            false
+        }
+
+        val kfm = KeyboardFocusManager.getCurrentKeyboardFocusManager()
+        kfm.addKeyEventDispatcher(dispatcher)
 
         val savedOffset = editor.caretModel.offset
         val selectionStart = editor.selectionModel.selectionStart
