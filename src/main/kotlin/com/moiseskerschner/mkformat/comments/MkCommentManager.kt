@@ -3,14 +3,17 @@ package com.moiseskerschner.mkformat.comments
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.RangeMarker
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.TextRange
+import com.intellij.openapi.vfs.VirtualFile
 import java.util.UUID
 
 class MkCommentManager {
 
     private val comments = mutableListOf<MkComment>()
     private val markers = mutableListOf<RangeMarker>()
+    private var document: Document? = null
 
     fun addComment(editor: Editor, request: String): MkComment {
         val document = editor.document
@@ -28,6 +31,7 @@ class MkCommentManager {
         )
         comments.add(comment)
         markers.add(document.createRangeMarker(selectionStart, selectionEnd))
+        saveIfDocumentAvailable()
         return comment
     }
 
@@ -56,6 +60,7 @@ class MkCommentManager {
             markers[index].dispose()
             comments.removeAt(index)
             markers.removeAt(index)
+            saveIfDocumentAvailable()
         }
     }
 
@@ -63,6 +68,25 @@ class MkCommentManager {
         markers.forEach { it.dispose() }
         markers.clear()
         comments.clear()
+        saveIfDocumentAvailable()
+    }
+
+    private fun saveIfDocumentAvailable() {
+        val doc = document ?: return
+        val vFile = FileDocumentManager.getInstance().getFile(doc) ?: return
+        MkCommentStorage.save(vFile, comments.toList())
+    }
+
+    fun loadFromStorage(file: VirtualFile, document: Document) {
+        val loaded = MkCommentStorage.load(file)
+        if (loaded.isEmpty()) return
+        comments.clear()
+        markers.forEach { it.dispose() }
+        markers.clear()
+        for (comment in loaded) {
+            comments.add(comment)
+            markers.add(document.createRangeMarker(comment.startOffset, comment.endOffset))
+        }
     }
 
     companion object {
@@ -73,7 +97,12 @@ class MkCommentManager {
             if (manager == null) {
                 manager = MkCommentManager()
                 document.putUserData(KEY, manager)
+                val vFile = FileDocumentManager.getInstance().getFile(document)
+                if (vFile != null) {
+                    manager.loadFromStorage(vFile, document)
+                }
             }
+            manager.document = document
             return manager
         }
     }
