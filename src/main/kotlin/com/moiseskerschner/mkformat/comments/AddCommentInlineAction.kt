@@ -59,6 +59,7 @@ class AddCommentInlineAction : AnAction() {
             .setCancelKeyEnabled(false)
             .setCancelOnWindowDeactivation(false)
             .setCancelOnClickOutside(false)
+            .setResizable(true)
             .createPopup()
 
         val dispatcher = KeyEventDispatcher { event ->
