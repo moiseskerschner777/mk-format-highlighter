@@ -67,7 +67,8 @@ data class MkComment(
 - A `JPanel` docked at the bottom of the editor (via `EditorNotifications`).
 - Shows the comment counter ("N comments stacked"; hidden when count = 0).
 - Clicking the counter opens a read-only `JBPopup` popover displaying the
-  formatted output (same text that was auto-copied to the clipboard).
+  formatted output with mk-format depth colors applied (depth 0–3 matching
+  `MkColors`), 12px inner padding, monospaced font, cancel on Escape/click-outside.
 
 ### `MkCommentFormatter`
 ```kotlin
