@@ -4,6 +4,7 @@ import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.openapi.ui.popup.JBPopupFactory
@@ -19,12 +20,12 @@ import java.awt.KeyboardFocusManager
 import java.awt.KeyEventDispatcher
 import java.awt.datatransfer.StringSelection
 import java.awt.event.KeyEvent
-import javax.swing.JPanel
 import javax.swing.JScrollPane
 
 class AddCommentInlineAction : AnAction() {
 
     private val logger = Logger.getInstance(AddCommentInlineAction::class.java)
+    private var activeDispatcher: KeyEventDispatcher? = null
 
     override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
 
@@ -39,6 +40,9 @@ class AddCommentInlineAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val editor = e.getData(CommonDataKeys.EDITOR) ?: return
         val vFile = e.getData(CommonDataKeys.VIRTUAL_FILE)
+        val kfm = KeyboardFocusManager.getCurrentKeyboardFocusManager()
+
+        activeDispatcher?.let { kfm.removeKeyEventDispatcher(it) }
 
         val textArea = JBTextArea()
         textArea.rows = 3
@@ -63,55 +67,66 @@ class AddCommentInlineAction : AnAction() {
             .createPopup()
 
         val dispatcher = KeyEventDispatcher { event ->
-            if (event.id == KeyEvent.KEY_PRESSED && event.keyCode == KeyEvent.VK_TAB) {
-                if (event.isShiftDown) {
-                    val pos = textArea.caretPosition
-                    val lineStart = textArea.text.lastIndexOf('\n', pos - 1) + 1
-                    val prefix = textArea.text.substring(lineStart, pos)
-                    val remove = minOf(prefix.count { it == ' ' }, 4)
-                    if (remove > 0) {
-                        textArea.select(lineStart, lineStart + remove)
-                        textArea.replaceSelection("")
-                    }
-                } else {
-                    textArea.replaceSelection("    ")
-                }
-                return@KeyEventDispatcher true
+            if (event.id != KeyEvent.KEY_PRESSED) return@KeyEventDispatcher false
+            if (!popup.isVisible) {
+                cleanupDispatcher()
+                return@KeyEventDispatcher false
             }
-            if (event.id == KeyEvent.KEY_PRESSED && event.keyCode == KeyEvent.VK_ENTER) {
-                if (event.isShiftDown) {
-                    textArea.replaceSelection("\n")
+            when (event.keyCode) {
+                KeyEvent.VK_TAB -> {
+                    if (event.isShiftDown) {
+                        val pos = textArea.caretPosition
+                        val lineStart = textArea.text.lastIndexOf('\n', pos - 1) + 1
+                        val prefix = textArea.text.substring(lineStart, pos)
+                        val remove = minOf(prefix.count { it == ' ' }, 4)
+                        if (remove > 0) {
+                            textArea.select(lineStart, lineStart + remove)
+                            textArea.replaceSelection("")
+                        }
+                    } else {
+                        textArea.replaceSelection("    ")
+                    }
                     return@KeyEventDispatcher true
                 }
-                val request = textArea.text
-                if (request.isNotBlank()) {
-                    val manager = MkCommentManager.getInstance(editor.document)
-                    val comment = manager.addComment(editor, request)
-                    logger.info("line ${comment.lineNumber}: \"${comment.snippet}\" — ${comment.request}")
-                    if (vFile != null) {
-                        val formatted = MkCommentFormatter.format(vFile.name, manager.getComments())
-                        CopyPasteManager.getInstance().setContents(StringSelection(formatted))
+                KeyEvent.VK_ENTER -> {
+                    if (event.isShiftDown) {
+                        textArea.replaceSelection("\n")
+                        return@KeyEventDispatcher true
                     }
-                    val project = editor.project
-                    if (project != null) {
-                        val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
-                        if (psiFile != null) {
-                            DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
+                    val request = textArea.text
+                    if (request.isNotBlank()) {
+                        ApplicationManager.getApplication().runReadAction {
+                            val manager = MkCommentManager.getInstance(editor.document)
+                            val comment = manager.addComment(editor, request)
+                            logger.info("line ${comment.lineNumber}: \"${comment.snippet}\" — ${comment.request}")
+                            if (vFile != null) {
+                                val formatted = MkCommentFormatter.format(vFile.name, manager.getComments())
+                                CopyPasteManager.getInstance().setContents(StringSelection(formatted))
+                            }
+                            val project = editor.project
+                            if (project != null) {
+                                val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
+                                if (psiFile != null) {
+                                    DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
+                                }
+                                EditorNotifications.getInstance(project).updateAllNotifications()
+                            }
                         }
-                        EditorNotifications.getInstance(project).updateAllNotifications()
                     }
+                    popup.cancel()
+                    cleanupDispatcher()
+                    return@KeyEventDispatcher true
                 }
-                popup.cancel()
-                return@KeyEventDispatcher true
-            }
-            if (event.id == KeyEvent.KEY_PRESSED && event.keyCode == KeyEvent.VK_ESCAPE) {
-                popup.cancel()
-                return@KeyEventDispatcher true
+                KeyEvent.VK_ESCAPE -> {
+                    popup.cancel()
+                    cleanupDispatcher()
+                    return@KeyEventDispatcher true
+                }
             }
             false
         }
 
-        val kfm = KeyboardFocusManager.getCurrentKeyboardFocusManager()
+        activeDispatcher = dispatcher
         kfm.addKeyEventDispatcher(dispatcher)
 
         val savedOffset = editor.caretModel.offset
@@ -119,5 +134,12 @@ class AddCommentInlineAction : AnAction() {
         editor.caretModel.moveToOffset(selectionStart)
         popup.showInBestPositionFor(editor)
         editor.caretModel.moveToOffset(savedOffset)
+    }
+
+    private fun cleanupDispatcher() {
+        activeDispatcher?.let {
+            KeyboardFocusManager.getCurrentKeyboardFocusManager().removeKeyEventDispatcher(it)
+        }
+        activeDispatcher = null
     }
 }
