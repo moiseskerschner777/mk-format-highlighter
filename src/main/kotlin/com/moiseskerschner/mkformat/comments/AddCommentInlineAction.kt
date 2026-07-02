@@ -11,7 +11,7 @@ import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.ui.EditorNotifications
 import com.intellij.ui.JBColor
-import com.intellij.ui.components.JBTextField
+import com.intellij.ui.components.JBTextArea
 import com.intellij.util.ui.JBUI
 import com.moiseskerschner.mkformat.MkFileType
 import java.awt.BorderLayout
@@ -20,6 +20,7 @@ import java.awt.datatransfer.StringSelection
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 import javax.swing.JPanel
+import javax.swing.JScrollPane
 
 class AddCommentInlineAction : AnAction() {
 
@@ -39,54 +40,60 @@ class AddCommentInlineAction : AnAction() {
         val editor = e.getData(CommonDataKeys.EDITOR) ?: return
         val vFile = e.getData(CommonDataKeys.VIRTUAL_FILE)
 
-        val textField = JBTextField()
-        textField.preferredSize = Dimension(350, 24)
+        val textArea = JBTextArea()
+        textArea.rows = 3
+        textArea.columns = 40
+        textArea.lineWrap = true
+        textArea.wrapStyleWord = true
 
-        val panel = JPanel(BorderLayout())
-        panel.border = JBUI.Borders.compound(
+        val scrollPane = JScrollPane(textArea)
+        scrollPane.preferredSize = Dimension(350, 60)
+        scrollPane.border = JBUI.Borders.compound(
             JBUI.Borders.customLine(JBColor.border(), 1),
             JBUI.Borders.empty(2)
         )
-        panel.add(textField, BorderLayout.CENTER)
 
         val popup = JBPopupFactory.getInstance()
-            .createComponentPopupBuilder(panel, textField)
+            .createComponentPopupBuilder(scrollPane, textArea)
             .setRequestFocus(true)
             .setCancelKeyEnabled(false)
-            .setCancelOnWindowDeactivation(true)
+            .setCancelOnWindowDeactivation(false)
+            .setCancelOnClickOutside(false)
             .createPopup()
 
-        textField.addKeyListener(object : KeyAdapter() {
+        textArea.addKeyListener(object : KeyAdapter() {
             override fun keyPressed(e: KeyEvent) {
-                when (e.keyCode) {
-                    KeyEvent.VK_ENTER -> {
-                        val request = textField.text
-                        if (request.isNotBlank()) {
-                            val manager = MkCommentManager.getInstance(editor.document)
-                            val comment = manager.addComment(editor, request)
-                            logger.info("line ${comment.lineNumber}: \"${comment.snippet}\" — ${comment.request}")
-                            if (vFile != null) {
-                                val formatted = MkCommentFormatter.format(vFile.name, manager.getComments())
-                                CopyPasteManager.getInstance().setContents(StringSelection(formatted))
-                            }
-                            val project = editor.project
-                            if (project != null) {
-                                val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
-                                if (psiFile != null) {
-                                    DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
-                                }
-                                EditorNotifications.getInstance(project).updateAllNotifications()
-                            }
+                if (e.keyCode == KeyEvent.VK_ENTER && !e.isShiftDown) {
+                    e.consume()
+                    val request = textArea.text
+                    if (request.isNotBlank()) {
+                        val manager = MkCommentManager.getInstance(editor.document)
+                        val comment = manager.addComment(editor, request)
+                        logger.info("line ${comment.lineNumber}: \"${comment.snippet}\" — ${comment.request}")
+                        if (vFile != null) {
+                            val formatted = MkCommentFormatter.format(vFile.name, manager.getComments())
+                            CopyPasteManager.getInstance().setContents(StringSelection(formatted))
                         }
-                        popup.cancel()
+                        val project = editor.project
+                        if (project != null) {
+                            val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
+                            if (psiFile != null) {
+                                DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
+                            }
+                            EditorNotifications.getInstance(project).updateAllNotifications()
+                        }
                     }
-                    KeyEvent.VK_ESCAPE -> {
-                        popup.cancel()
-                    }
+                    popup.cancel()
+                } else if (e.keyCode == KeyEvent.VK_ESCAPE) {
+                    popup.cancel()
                 }
             }
         })
 
+        val savedOffset = editor.caretModel.offset
+        val selectionStart = editor.selectionModel.selectionStart
+        editor.caretModel.moveToOffset(selectionStart)
         popup.showInBestPositionFor(editor)
+        editor.caretModel.moveToOffset(savedOffset)
     }
 }
