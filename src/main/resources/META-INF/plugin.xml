@@ -26,5 +26,22 @@
         <lang.foldingBuilder
             language="mk-format"
             implementationClass="com.moiseskerschner.mkformat.MkFoldingBuilder"/>
+        <codeInsight.lineMarkerProvider
+            language="mk-format"
+            implementationClass="com.moiseskerschner.mkformat.comments.MkCommentGutterProvider"/>
+        <editorNotificationProvider
+            implementation="com.moiseskerschner.mkformat.comments.MkCommentBarProvider"/>
     </extensions>
+
+    <actions>
+        <action id="MkComments.LogComments" class="com.moiseskerschner.mkformat.comments.LogCommentsAction"
+                text="Log mk Comments" description="Log all stacked mk comments">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+        <action id="MkComments.AddComment" class="com.moiseskerschner.mkformat.comments.AddCommentInlineAction"
+                text="Add Comment" description="Add a comment for the selected text">
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift A"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </action>
+    </actions>
 </idea-plugin>
