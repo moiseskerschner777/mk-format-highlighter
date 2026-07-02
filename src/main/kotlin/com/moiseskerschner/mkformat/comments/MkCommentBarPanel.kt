@@ -1,5 +1,6 @@
 package com.moiseskerschner.mkformat.comments
 
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopup
 import com.intellij.openapi.ui.popup.JBPopupFactory
@@ -42,7 +43,7 @@ class MkCommentBarPanel(count: Int, fileName: String, comments: List<MkComment>,
         }
 
         val scrollPane = JScrollPane(content)
-        scrollPane.preferredSize = Dimension(550, 300)
+        scrollPane.preferredSize = Dimension(550, 200)
 
         val popup = JBPopupFactory.getInstance()
             .createComponentPopupBuilder(scrollPane, content)
@@ -56,48 +57,46 @@ class MkCommentBarPanel(count: Int, fileName: String, comments: List<MkComment>,
     private fun buildContent(fileName: String, comments: List<MkComment>, onRemove: (String) -> Unit): JPanel {
         val content = JPanel()
         content.layout = BoxLayout(content, BoxLayout.Y_AXIS)
-        content.border = JBUI.Borders.empty(12, 12, 12, 12)
-        content.alignmentX = Component.LEFT_ALIGNMENT
+        content.border = JBUI.Borders.empty(10, 12, 10, 12)
 
         val header = JLabel("file: $fileName")
         header.foreground = Color(0xF5, 0xF7, 0xFA)
-        header.font = Font("Monospaced", Font.PLAIN, 12)
+        header.font = Font("Monospaced", Font.PLAIN, 11)
         header.alignmentX = Component.LEFT_ALIGNMENT
         content.add(header)
 
         for (comment in comments) {
-            content.add(JLabel(" ").apply { alignmentX = Component.LEFT_ALIGNMENT })
-
-            val row = JPanel()
-            row.layout = BoxLayout(row, BoxLayout.X_AXIS)
-            row.alignmentX = Component.LEFT_ALIGNMENT
-            row.maximumSize = Dimension(Int.MAX_VALUE, 18)
+            val lineRow = JPanel()
+            lineRow.layout = BoxLayout(lineRow, BoxLayout.X_AXIS)
+            lineRow.alignmentX = Component.LEFT_ALIGNMENT
 
             val lineLabel = JLabel("line ${comment.lineNumber}: ")
             lineLabel.foreground = Color(0xFF, 0x9E, 0x64)
-            lineLabel.font = Font("Monospaced", Font.PLAIN, 12)
-            row.add(lineLabel)
+            lineLabel.font = Font("Monospaced", Font.PLAIN, 11)
+            lineRow.add(lineLabel)
 
             val snippetLabel = JLabel("\"${comment.snippet}\"")
             snippetLabel.foreground = Color(0x7D, 0xCF, 0xFF)
-            snippetLabel.font = Font("Monospaced", Font.PLAIN, 12)
-            row.add(snippetLabel)
+            snippetLabel.font = Font("Monospaced", Font.PLAIN, 11)
+            lineRow.add(snippetLabel)
 
-            row.add(Box.createHorizontalGlue())
+            lineRow.add(Box.createHorizontalGlue())
 
-            val removeBtn = JButton("x")
+            val removeBtn = JButton(AllIcons.Actions.Close)
             removeBtn.preferredSize = Dimension(16, 16)
             removeBtn.minimumSize = Dimension(16, 16)
             removeBtn.maximumSize = Dimension(16, 16)
-            removeBtn.font = Font("Monospaced", Font.PLAIN, 8)
+            removeBtn.foreground = Color(0xFF, 0x9E, 0x64)
             removeBtn.margin = java.awt.Insets(0, 0, 0, 0)
+            removeBtn.isBorderPainted = false
+            removeBtn.isContentAreaFilled = false
             removeBtn.addActionListener { onRemove(comment.id) }
-            row.add(removeBtn)
-            content.add(row)
+            lineRow.add(removeBtn)
+            content.add(lineRow)
 
-            val requestLabel = JLabel("> ${comment.request}")
+            val requestLabel = JLabel("  > ${comment.request}")
             requestLabel.foreground = Color(0x9E, 0xCE, 0x6A)
-            requestLabel.font = Font("Monospaced", Font.PLAIN, 12)
+            requestLabel.font = Font("Monospaced", Font.PLAIN, 11)
             requestLabel.alignmentX = Component.LEFT_ALIGNMENT
             content.add(requestLabel)
         }
