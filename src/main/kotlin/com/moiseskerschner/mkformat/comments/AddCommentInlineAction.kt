@@ -63,6 +63,21 @@ class AddCommentInlineAction : AnAction() {
             .createPopup()
 
         val dispatcher = KeyEventDispatcher { event ->
+            if (event.id == KeyEvent.KEY_PRESSED && event.keyCode == KeyEvent.VK_TAB) {
+                if (event.isShiftDown) {
+                    val pos = textArea.caretPosition
+                    val lineStart = textArea.text.lastIndexOf('\n', pos - 1) + 1
+                    val prefix = textArea.text.substring(lineStart, pos)
+                    val remove = minOf(prefix.count { it == ' ' }, 4)
+                    if (remove > 0) {
+                        textArea.select(lineStart, lineStart + remove)
+                        textArea.replaceSelection("")
+                    }
+                } else {
+                    textArea.replaceSelection("    ")
+                }
+                return@KeyEventDispatcher true
+            }
             if (event.id == KeyEvent.KEY_PRESSED && event.keyCode == KeyEvent.VK_ENTER) {
                 if (event.isShiftDown) {
                     textArea.replaceSelection("\n")
