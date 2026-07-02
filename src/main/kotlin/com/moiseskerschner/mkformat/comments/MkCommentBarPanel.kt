@@ -1,76 +1,90 @@
 package com.moiseskerschner.mkformat.comments
 
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.popup.JBPopup
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.util.ui.JBUI
-import java.awt.BorderLayout
 import java.awt.Color
+import java.awt.Component
 import java.awt.Dimension
 import java.awt.Font
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import javax.swing.Box
+import javax.swing.BoxLayout
 import javax.swing.JButton
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.JScrollPane
-import javax.swing.JTextPane
-import javax.swing.SwingUtilities
-import javax.swing.text.StyleConstants
 
-class MkCommentBarPanel(count: Int, fileName: String, comments: List<MkComment>, project: Project, onClearAll: () -> Unit) : JPanel() {
+class MkCommentBarPanel(count: Int, fileName: String, comments: List<MkComment>, project: Project, onRemoveComment: (String) -> Unit) : JPanel() {
     init {
         val text = if (count == 1) "1 comment stacked" else "$count comments stacked"
         val label = JLabel(text)
         label.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
-                if (SwingUtilities.isRightMouseButton(e)) {
-                    val clearPanel = JPanel(BorderLayout())
-                    val clearBtn = JButton("Clear all")
-                    clearBtn.addActionListener {
-                        onClearAll()
-                    }
-                    clearPanel.add(clearBtn, BorderLayout.CENTER)
-                    val popup = JBPopupFactory.getInstance()
-                        .createComponentPopupBuilder(clearPanel, clearBtn)
-                        .setCancelOnClickOutside(true)
-                        .setCancelKeyEnabled(true)
-                        .createPopup()
-                    popup.show(label)
-                    return
-                }
+                var popupRef: JBPopup? = null
 
-                val textPane = JTextPane()
-                textPane.isEditable = false
-                textPane.isOpaque = false
-                textPane.font = Font("Monospaced", Font.PLAIN, 12)
-                textPane.border = JBUI.Borders.empty(12)
+                val content = JPanel()
+                content.layout = BoxLayout(content, BoxLayout.Y_AXIS)
+                content.border = JBUI.Borders.empty(12, 12, 12, 12)
+                content.alignmentX = Component.LEFT_ALIGNMENT
 
-                val doc = textPane.styledDocument
+                val header = JLabel("file: $fileName")
+                header.foreground = Color(0xF5, 0xF7, 0xFA)
+                header.font = Font("Monospaced", Font.PLAIN, 12)
+                header.alignmentX = Component.LEFT_ALIGNMENT
+                content.add(header)
 
-                val depth0Style = doc.addStyle("depth0", null)
-                StyleConstants.setForeground(depth0Style, Color(0xF5, 0xF7, 0xFA))
-                val depth1Style = doc.addStyle("depth1", null)
-                StyleConstants.setForeground(depth1Style, Color(0xFF, 0x9E, 0x64))
-                val depth2Style = doc.addStyle("depth2", null)
-                StyleConstants.setForeground(depth2Style, Color(0x7D, 0xCF, 0xFF))
-                val depth3Style = doc.addStyle("depth3", null)
-                StyleConstants.setForeground(depth3Style, Color(0x9E, 0xCE, 0x6A))
-
-                doc.insertString(doc.length, "file: $fileName\n", depth0Style)
                 for (comment in comments) {
-                    doc.insertString(doc.length, "\n", null)
-                    doc.insertString(doc.length, "line ${comment.lineNumber}: ", depth1Style)
-                    doc.insertString(doc.length, "\"${comment.snippet}\"\n", depth2Style)
-                    doc.insertString(doc.length, "> ${comment.request}", depth3Style)
+                    content.add(JLabel(" ").apply { alignmentX = Component.LEFT_ALIGNMENT })
+
+                    val row = JPanel()
+                    row.layout = BoxLayout(row, BoxLayout.X_AXIS)
+                    row.alignmentX = Component.LEFT_ALIGNMENT
+                    row.maximumSize = Dimension(Int.MAX_VALUE, 18)
+
+                    val lineLabel = JLabel("line ${comment.lineNumber}: ")
+                    lineLabel.foreground = Color(0xFF, 0x9E, 0x64)
+                    lineLabel.font = Font("Monospaced", Font.PLAIN, 12)
+                    row.add(lineLabel)
+
+                    val snippetLabel = JLabel("\"${comment.snippet}\"")
+                    snippetLabel.foreground = Color(0x7D, 0xCF, 0xFF)
+                    snippetLabel.font = Font("Monospaced", Font.PLAIN, 12)
+                    row.add(snippetLabel)
+
+                    row.add(Box.createHorizontalGlue())
+
+                    val removeBtn = JButton("x")
+                    removeBtn.preferredSize = Dimension(16, 16)
+                    removeBtn.minimumSize = Dimension(16, 16)
+                    removeBtn.maximumSize = Dimension(16, 16)
+                    removeBtn.font = Font("Monospaced", Font.PLAIN, 8)
+                    removeBtn.margin = java.awt.Insets(0, 0, 0, 0)
+                    removeBtn.addActionListener {
+                        onRemoveComment(comment.id)
+                        popupRef?.cancel()
+                    }
+                    row.add(removeBtn)
+                    content.add(row)
+
+                    val requestLabel = JLabel("> ${comment.request}")
+                    requestLabel.foreground = Color(0x9E, 0xCE, 0x6A)
+                    requestLabel.font = Font("Monospaced", Font.PLAIN, 12)
+                    requestLabel.alignmentX = Component.LEFT_ALIGNMENT
+                    content.add(requestLabel)
                 }
 
-                val scrollPane = JScrollPane(textPane)
-                scrollPane.preferredSize = Dimension(500, 300)
+                val scrollPane = JScrollPane(content)
+                scrollPane.preferredSize = Dimension(550, 300)
+
                 val popup = JBPopupFactory.getInstance()
-                    .createComponentPopupBuilder(scrollPane, textPane)
+                    .createComponentPopupBuilder(scrollPane, content)
                     .setCancelOnClickOutside(true)
                     .setCancelKeyEnabled(true)
                     .createPopup()
+                popupRef = popup
                 popup.showCenteredInCurrentWindow(project)
             }
         })
