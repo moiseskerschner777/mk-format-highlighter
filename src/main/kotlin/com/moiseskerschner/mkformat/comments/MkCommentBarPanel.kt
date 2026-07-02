@@ -1,6 +1,7 @@
 package com.moiseskerschner.mkformat.comments
 
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopup
 import com.intellij.openapi.ui.popup.JBPopupFactory
@@ -9,6 +10,7 @@ import java.awt.Color
 import java.awt.Component
 import java.awt.Dimension
 import java.awt.Font
+import java.awt.datatransfer.StringSelection
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import javax.swing.Box
@@ -28,6 +30,12 @@ class MkCommentBarPanel(count: Int, fileName: String, comments: List<MkComment>,
             }
         })
         add(label)
+        val copyBtn = JButton("Copy for agent")
+        copyBtn.addActionListener {
+            val formatted = MkCommentFormatter.format(fileName, comments)
+            CopyPasteManager.getInstance().setContents(StringSelection(formatted))
+        }
+        add(copyBtn)
     }
 
     private fun showPreview(fileName: String, comments: List<MkComment>, project: Project, onRemoveComment: (String) -> Unit) {
