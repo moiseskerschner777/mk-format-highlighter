@@ -81,4 +81,3 @@ notes:
 
 
 
-1 - Whenver I press enter it must copy to clipboard right away

@@ -5,6 +5,7 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.psi.PsiDocumentManager
@@ -15,6 +16,7 @@ import com.intellij.util.ui.JBUI
 import com.moiseskerschner.mkformat.MkFileType
 import java.awt.BorderLayout
 import java.awt.Dimension
+import java.awt.datatransfer.StringSelection
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 import javax.swing.JPanel
@@ -35,6 +37,7 @@ class AddCommentInlineAction : AnAction() {
 
     override fun actionPerformed(e: AnActionEvent) {
         val editor = e.getData(CommonDataKeys.EDITOR) ?: return
+        val vFile = e.getData(CommonDataKeys.VIRTUAL_FILE)
 
         val textField = JBTextField()
         textField.preferredSize = Dimension(350, 24)
@@ -62,6 +65,10 @@ class AddCommentInlineAction : AnAction() {
                             val manager = MkCommentManager.getInstance(editor.document)
                             val comment = manager.addComment(editor, request)
                             logger.info("line ${comment.lineNumber}: \"${comment.snippet}\" — ${comment.request}")
+                            if (vFile != null) {
+                                val formatted = MkCommentFormatter.format(vFile.name, manager.getComments())
+                                CopyPasteManager.getInstance().setContents(StringSelection(formatted))
+                            }
                             val project = editor.project
                             if (project != null) {
                                 val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document)

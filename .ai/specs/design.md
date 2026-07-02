@@ -11,7 +11,7 @@ src/main/kotlin/com/moiseskerschner/mkformat/comments/
 ├── MkCommentStorage.kt       # JSON sidecar persistence
 ├── AddCommentInlineAction.kt # editor selection -> inline input -> stack on Enter
 ├── MkCommentGutterProvider.kt# gutter icon per commented line
-├── MkCommentBarPanel.kt      # bottom bar: count + Copy + Clear all
+├── MkCommentBarPanel.kt      # bottom bar: count + click-to-preview popover
 └── MkCommentFormatter.kt     # stack -> paste-ready text block
 ```
 
@@ -64,13 +64,10 @@ data class MkComment(
   listing the comment(s) on that line with a per-comment "x" to clear.
 
 ### `MkCommentBarPanel`
-- A `JPanel` docked at the bottom of the editor (via `EditorNotifications` or
-  a custom `FileEditor` panel — decided during Phase 3 implementation).
-- Shows "N comments stacked" (or "No comments stacked" state = hidden
-  entirely per spec: bar only shows when count ≥ 1).
-- "Copy for agent" button → `MkCommentFormatter.format(comments)` →
-  `CopyPasteManager.getInstance().setContents(...)`.
-- "Clear all" button → `MkCommentManager.clearAll()`.
+- A `JPanel` docked at the bottom of the editor (via `EditorNotifications`).
+- Shows the comment counter ("N comments stacked"; hidden when count = 0).
+- Clicking the counter opens a read-only `JBPopup` popover displaying the
+  formatted output (same text that was auto-copied to the clipboard).
 
 ### `MkCommentFormatter`
 ```kotlin
@@ -102,9 +99,11 @@ line 31: "    color palette:"
 - **Bottom bar visibility**: bar is added/removed from the editor's panel
   hierarchy based on `comments.isEmpty()`, not just hidden — keeps the
   editor UI clean when there's nothing stacked.
-- **No auto-clear on copy**: "Copy for agent" is non-destructive; "Clear
-  all" is a separate, explicit action. Avoids accidentally losing context if
-  the user wants to copy twice.
+- **Auto-copy on stack**: When a comment is stacked via Enter, the full
+  formatted stack is immediately copied to the clipboard via
+  `MkCommentFormatter.format()` → `CopyPasteManager`. No manual click
+  required. Copying is non-destructive — the stack is never cleared
+  automatically; only an explicit "Clear all" empties it.
 
 ## Data flow
 
@@ -113,15 +112,9 @@ select text
     -> AddCommentInlineAction triggers inline input
     -> Enter pressed
     -> MkCommentManager.addComment() creates RangeMarker + MkComment
+    -> MkCommentFormatter.format() builds text block, CopyPasteManager puts it on clipboard
     -> MkCommentGutterProvider repaints gutter for that line
     -> MkCommentBarPanel updates count, becomes visible if it wasn't
-...
-(repeat for more selections)
-...
-click "Copy for agent"
-    -> MkCommentManager.getComments() resolves current RangeMarker offsets
-    -> MkCommentFormatter.format() builds text block
-    -> CopyPasteManager puts it on the system clipboard
 ```
 
 Persistence is a side channel, triggered on file save/close and file open —
@@ -131,9 +124,9 @@ it does not sit in the interactive stacking loop above.
 
 | Action | Precondition | Result |
 |---|---|---|
-| Select text, type note, Enter | Editor has a `.mk` file open | Comment stacked, gutter icon shown, bar count +1 |
+| Select text, type note, Enter | Editor has a `.mk` file open | Comment stacked, clipboard set, gutter icon shown, bar count +1 |
 | Select text, type note, Escape | Inline input open | Input dismissed, nothing stacked |
 | Click gutter icon | Line has ≥1 comment | Popup lists comment(s), each with clear "x" |
-| Click "Copy for agent" | Stack has ≥1 comment | Clipboard set, stack unchanged |
+| Click bar counter | Stack has ≥1 comment | Popover shows formatted clipboard text |
 | Click "Clear all" | Stack has ≥1 comment | Stack emptied, bar hides, gutter icons removed |
 | Close and reopen file | Sidecar JSON exists | Comments reloaded, RangeMarkers re-anchored by offset |
