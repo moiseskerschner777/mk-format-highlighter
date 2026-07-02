@@ -1,10 +1,13 @@
 package com.moiseskerschner.mkformat.comments
 
+import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.ui.EditorNotificationProvider
+import com.intellij.ui.EditorNotifications
 import com.moiseskerschner.mkformat.MkFileType
 import java.util.function.Function
 import javax.swing.JComponent
@@ -20,6 +23,15 @@ class MkCommentBarProvider : EditorNotificationProvider {
         val manager = MkCommentManager.getInstance(document)
         val count = manager.getComments().size
         if (count == 0) return null
-        return Function<FileEditor, JComponent> { MkCommentBarPanel(count, file.name, manager.getComments(), project) }
+        return Function<FileEditor, JComponent> {
+            MkCommentBarPanel(count, file.name, manager.getComments(), project) {
+                manager.clearAll()
+                val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document)
+                if (psiFile != null) {
+                    DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
+                }
+                EditorNotifications.getInstance(project).updateAllNotifications()
+            }
+        }
     }
 }

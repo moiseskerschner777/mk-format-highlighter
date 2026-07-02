@@ -3,24 +3,42 @@ package com.moiseskerschner.mkformat.comments
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.util.ui.JBUI
+import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.Font
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import javax.swing.JButton
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.JScrollPane
 import javax.swing.JTextPane
+import javax.swing.SwingUtilities
 import javax.swing.text.StyleConstants
-import javax.swing.text.StyledDocument
 
-class MkCommentBarPanel(count: Int, fileName: String, comments: List<MkComment>, project: Project) : JPanel() {
+class MkCommentBarPanel(count: Int, fileName: String, comments: List<MkComment>, project: Project, onClearAll: () -> Unit) : JPanel() {
     init {
         val text = if (count == 1) "1 comment stacked" else "$count comments stacked"
         val label = JLabel(text)
         label.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    val clearPanel = JPanel(BorderLayout())
+                    val clearBtn = JButton("Clear all")
+                    clearBtn.addActionListener {
+                        onClearAll()
+                    }
+                    clearPanel.add(clearBtn, BorderLayout.CENTER)
+                    val popup = JBPopupFactory.getInstance()
+                        .createComponentPopupBuilder(clearPanel, clearBtn)
+                        .setCancelOnClickOutside(true)
+                        .setCancelKeyEnabled(true)
+                        .createPopup()
+                    popup.show(label)
+                    return
+                }
+
                 val textPane = JTextPane()
                 textPane.isEditable = false
                 textPane.isOpaque = false

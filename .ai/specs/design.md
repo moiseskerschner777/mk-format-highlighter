@@ -66,9 +66,12 @@ data class MkComment(
 ### `MkCommentBarPanel`
 - A `JPanel` docked at the bottom of the editor (via `EditorNotifications`).
 - Shows the comment counter ("N comments stacked"; hidden when count = 0).
-- Clicking the counter opens a read-only `JBPopup` popover displaying the
+- Left-clicking the counter opens a read-only `JBPopup` popover displaying the
   formatted output with mk-format depth colors applied (depth 0–3 matching
   `MkColors`), 12px inner padding, monospaced font, cancel on Escape/click-outside.
+- Right-clicking the counter opens a "Clear all" popup that calls
+  `MkCommentManager.clearAll()`, immediately updating the gutter, bar, and
+  sidecar JSON.
 
 ### `MkCommentFormatter`
 ```kotlin
@@ -128,6 +131,6 @@ it does not sit in the interactive stacking loop above.
 | Select text, type note, Enter | Editor has a `.mk` file open | Comment stacked, clipboard set, gutter icon shown, bar count +1 |
 | Select text, type note, Escape | Inline input open | Input dismissed, nothing stacked |
 | Click gutter icon | Line has ≥1 comment | Popup lists comment(s), each with clear "x" |
-| Click bar counter | Stack has ≥1 comment | Popover shows formatted clipboard text |
-| Click "Clear all" | Stack has ≥1 comment | Stack emptied, bar hides, gutter icons removed |
+| Left-click bar counter | Stack has ≥1 comment | Popover shows formatted clipboard text |
+| Right-click bar counter | Stack has ≥1 comment | Stack emptied, bar hides, gutter icons removed |
 | Close and reopen file | Sidecar JSON exists | Comments reloaded, RangeMarkers re-anchored by offset |
