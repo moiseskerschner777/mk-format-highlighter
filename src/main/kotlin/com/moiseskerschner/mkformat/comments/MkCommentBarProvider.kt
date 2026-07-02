@@ -20,6 +20,6 @@ class MkCommentBarProvider : EditorNotificationProvider {
         val manager = MkCommentManager.getInstance(document)
         val count = manager.getComments().size
         if (count == 0) return null
-        return Function<FileEditor, JComponent> { MkCommentBarPanel(count) }
+        return Function<FileEditor, JComponent> { MkCommentBarPanel(count, file.name, manager.getComments()) }
     }
 }
