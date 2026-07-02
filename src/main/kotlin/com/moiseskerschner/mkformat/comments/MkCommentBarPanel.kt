@@ -20,7 +20,7 @@ import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.JScrollPane
 
-class MkCommentBarPanel(count: Int, fileName: String, comments: List<MkComment>, project: Project, onRemoveComment: (String) -> Unit) : JPanel() {
+class MkCommentBarPanel(count: Int, fileName: String, comments: List<MkComment>, project: Project, onRemoveComment: (String) -> Unit, onClearAll: () -> Unit) : JPanel() {
     init {
         val text = if (count == 1) "1 comment stacked" else "$count comments stacked"
         val label = JLabel(text)
@@ -36,6 +36,14 @@ class MkCommentBarPanel(count: Int, fileName: String, comments: List<MkComment>,
             CopyPasteManager.getInstance().setContents(StringSelection(formatted))
         }
         add(copyBtn)
+        val clearBtn = JButton(AllIcons.Actions.Close)
+        clearBtn.preferredSize = Dimension(24, 24)
+        clearBtn.foreground = Color(0xFF, 0x9E, 0x64)
+        clearBtn.margin = java.awt.Insets(0, 0, 0, 0)
+        clearBtn.isBorderPainted = false
+        clearBtn.isContentAreaFilled = false
+        clearBtn.addActionListener { onClearAll() }
+        add(clearBtn)
     }
 
     private fun showPreview(fileName: String, comments: List<MkComment>, project: Project, onRemoveComment: (String) -> Unit) {
