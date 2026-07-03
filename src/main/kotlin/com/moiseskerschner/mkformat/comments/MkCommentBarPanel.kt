@@ -20,19 +20,19 @@ import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.JScrollPane
 
-class MkCommentBarPanel(count: Int, fileName: String, comments: List<MkComment>, project: Project, onRemoveComment: (String) -> Unit, onClearAll: () -> Unit) : JPanel() {
+class MkCommentBarPanel(count: Int, displayPath: String, fileName: String, comments: List<MkComment>, project: Project, onRemoveComment: (String) -> Unit, onClearAll: () -> Unit) : JPanel() {
     init {
         val text = if (count == 1) "1 comment stacked" else "$count comments stacked"
         val label = JLabel(text)
         label.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
-                showPreview(fileName, comments, project, onRemoveComment)
+                showPreview(displayPath, fileName, comments, project, onRemoveComment)
             }
         })
         add(label)
         val copyBtn = JButton("Copy for agent")
         copyBtn.addActionListener {
-            val formatted = MkCommentFormatter.format(fileName, comments)
+            val formatted = MkCommentFormatter.format(displayPath, fileName, comments)
             CopyPasteManager.getInstance().setContents(StringSelection(formatted))
         }
         add(copyBtn)
@@ -46,15 +46,15 @@ class MkCommentBarPanel(count: Int, fileName: String, comments: List<MkComment>,
         add(clearBtn)
     }
 
-    private fun showPreview(fileName: String, comments: List<MkComment>, project: Project, onRemoveComment: (String) -> Unit) {
+    private fun showPreview(displayPath: String, fileName: String, comments: List<MkComment>, project: Project, onRemoveComment: (String) -> Unit) {
         var popupRef: JBPopup? = null
 
-        val content = buildContent(fileName, comments) { id ->
+        val content = buildContent(displayPath, fileName, comments) { id ->
             onRemoveComment(id)
             popupRef?.cancel()
             val remaining = comments.filter { it.id != id }
             if (remaining.isNotEmpty()) {
-                showPreview(fileName, remaining, project, onRemoveComment)
+                showPreview(displayPath, fileName, remaining, project, onRemoveComment)
             }
         }
 
@@ -70,12 +70,12 @@ class MkCommentBarPanel(count: Int, fileName: String, comments: List<MkComment>,
         popup.showCenteredInCurrentWindow(project)
     }
 
-    private fun buildContent(fileName: String, comments: List<MkComment>, onRemove: (String) -> Unit): JPanel {
+    private fun buildContent(displayPath: String, fileName: String, comments: List<MkComment>, onRemove: (String) -> Unit): JPanel {
         val content = JPanel()
         content.layout = BoxLayout(content, BoxLayout.Y_AXIS)
         content.border = JBUI.Borders.empty(10, 12, 10, 12)
 
-        val header = JLabel("file: $fileName")
+        val header = JLabel("$displayPath: $fileName")
         header.foreground = Color(0xF5, 0xF7, 0xFA)
         header.font = Font("Monospaced", Font.PLAIN, 11)
         header.alignmentX = Component.LEFT_ALIGNMENT

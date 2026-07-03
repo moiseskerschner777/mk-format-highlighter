@@ -24,7 +24,8 @@ class MkCommentBarProvider : EditorNotificationProvider {
         val count = manager.getComments().size
         if (count == 0) return null
         return Function<FileEditor, JComponent> {
-            MkCommentBarPanel(count, file.name, manager.getComments(), project, { id ->
+            val displayPath = MkCommentFormatter.getRelativePath(project, file)
+        MkCommentBarPanel(count, displayPath, file.name, manager.getComments(), project, { id ->
                 manager.removeComment(id)
                 val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document)
                 if (psiFile != null) {

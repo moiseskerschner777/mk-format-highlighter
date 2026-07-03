@@ -100,7 +100,8 @@ class AddCommentInlineAction : AnAction() {
                             val comment = manager.addComment(editor, request)
                             logger.info("line ${comment.lineNumber}: \"${comment.snippet}\" — ${comment.request}")
                             if (vFile != null) {
-                                val formatted = MkCommentFormatter.format(vFile.name, manager.getComments())
+                                val displayPath = MkCommentFormatter.getRelativePath(editor.project!!, vFile)
+val formatted = MkCommentFormatter.format(displayPath, vFile.name, manager.getComments())
                                 CopyPasteManager.getInstance().setContents(StringSelection(formatted))
                             }
                             val project = editor.project
