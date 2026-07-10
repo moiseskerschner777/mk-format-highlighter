@@ -30,7 +30,7 @@ class MkCommentBarPanel(count: Int, displayPath: String, fileName: String, comme
             }
         })
         add(label)
-        val copyBtn = JButton("Copy for agent")
+        val copyBtn = JButton("Copy")
         copyBtn.addActionListener {
             val formatted = MkCommentFormatter.format(displayPath, fileName, comments)
             CopyPasteManager.getInstance().setContents(StringSelection(formatted))
