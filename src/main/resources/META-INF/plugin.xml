@@ -26,6 +26,9 @@
         <lang.foldingBuilder
             language="mk-format"
             implementationClass="com.moiseskerschner.mkformat.MkFoldingBuilder"/>
+        <spellchecker.support
+            language="mk-format"
+            implementationClass="com.moiseskerschner.mkformat.MkSpellcheckingStrategy"/>
         <codeInsight.lineMarkerProvider
             language="mk-format"
             implementationClass="com.moiseskerschner.mkformat.comments.MkCommentGutterProvider"/>
