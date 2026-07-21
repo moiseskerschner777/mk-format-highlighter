@@ -24,7 +24,7 @@ intellijPlatform {
     pluginConfiguration {
         ideaVersion {
             sinceBuild = "241"
-            untilBuild = "261.*"
+            untilBuild = provider { null }
         }
     }
 }
