@@ -2,8 +2,9 @@ package com.moiseskerschner.mkformat
 
 object MkParent {
     private const val COLON_MARKER = ":"
-    private const val SPACE_MARKER = " "
-    private const val DOUBLE_SPACE = "  "
+    private const val SPACE_MARKER_LENGTH = 3
+    private val SPACE_MARKER = " ".repeat(SPACE_MARKER_LENGTH)
+    private val SPACE_MARKER_OVERFLOW = " ".repeat(SPACE_MARKER_LENGTH + 1)
 
     fun isParent(line: CharSequence): Boolean {
         val content = withoutLineBreak(line)
@@ -14,7 +15,7 @@ object MkParent {
     fun isSpaceMarkedParent(line: CharSequence): Boolean {
         val content = withoutLineBreak(line)
         if (content.isBlank()) return false
-        return content.endsWith(SPACE_MARKER) && !content.endsWith(DOUBLE_SPACE)
+        return content.endsWith(SPACE_MARKER) && !content.endsWith(SPACE_MARKER_OVERFLOW)
     }
 
     fun label(line: CharSequence): String {
