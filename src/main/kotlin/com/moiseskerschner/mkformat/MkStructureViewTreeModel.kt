@@ -72,11 +72,10 @@ private fun processLine(
     rootChildren: MutableList<MkStructureViewElement>
 ) {
     val line = text.substring(start, end)
-    val trimmed = line.trimEnd()
-    if (trimmed.endsWith(":")) {
+    if (MkParent.isParent(line)) {
         val leadingSpaces = line.length - line.trimStart().length
         val depth = minOf(leadingSpaces / 4, 6)
-        val label = trimmed.substring(0, trimmed.length - 1).trim()
+        val label = MkParent.label(line)
         val node = MkStructureViewElement(label, depth, start, psiFile, mutableListOf())
         stack[depth] = node
         if (depth == 0) {

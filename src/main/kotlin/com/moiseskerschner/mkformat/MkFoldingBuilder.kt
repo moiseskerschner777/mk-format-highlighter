@@ -25,7 +25,7 @@ class MkFoldingBuilder : FoldingBuilder {
 
         for (i in lines.indices) {
             val line = lines[i]
-            if (!line.trimEnd().endsWith(":")) continue
+            if (!MkParent.isParent(line)) continue
 
             val currentDepth = (line.length - line.trimStart().length) / 4
 

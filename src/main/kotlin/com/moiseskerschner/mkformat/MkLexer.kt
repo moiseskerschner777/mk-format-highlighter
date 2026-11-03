@@ -8,7 +8,7 @@ import com.intellij.psi.tree.IElementType
  * Walks the file one line at a time. Depth = leading-space count / 4,
  * clamped to 6 (matching the mk-editor artifact's DEPTH_COLORS array,
  * which clamps the same way). A line is a "parent" if its trimmed
- * content ends with ':'.
+ * content ends with ':' or with a single trailing space (see [MkParent]).
  */
 class MkLexer : LexerBase() {
     private var buffer: CharSequence = ""
@@ -60,7 +60,7 @@ class MkLexer : LexerBase() {
         var spaces = 0
         while (spaces < lineText.length && lineText[spaces] == ' ') spaces++
         val depth = minOf(spaces / 4, 6)
-        val isParent = lineText.trimEnd().endsWith(":")
+        val isParent = MkParent.isParent(lineText)
 
         tokenType = if (isParent) MkTokenTypes.DEPTHS_PARENT[depth] else MkTokenTypes.DEPTHS[depth]
     }
