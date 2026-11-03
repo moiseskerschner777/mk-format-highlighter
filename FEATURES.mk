@@ -23,6 +23,11 @@ LLM agent.
   clamped to 7 levels (depth 0–6).
 - Parent lines (trimmed content ending with `:`) are rendered **bold** on top
   of their depth color, distinguishing group nodes from leaf items.
+- Inline labels (`Title: content` on a single line) render the `Title:` part
+  **bold** and keep the content after it in the regular depth color. A label
+  has at most 4 words, and is ignored when the line continues a paragraph
+  (previous line at the same depth doesn't end with `.`, `!` or `?`, and the
+  line doesn't start a new `-` / `*` / `•` list item).
 - Lexer treats the file as plain text line-by-line (no PSI tree), so
   highlighting never interferes with editing.
 
