@@ -32,6 +32,8 @@
         <codeInsight.lineMarkerProvider
             language="mk-format"
             implementationClass="com.moiseskerschner.mkformat.comments.MkCommentGutterProvider"/>
+        <stripTrailingSpacesFilterFactory
+            implementation="com.moiseskerschner.mkformat.MkTrailingSpacesFilterFactory"/>
         <editorNotificationProvider
             implementation="com.moiseskerschner.mkformat.comments.MkCommentBarProvider"/>
     </extensions>

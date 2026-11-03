@@ -1,19 +1,29 @@
 package com.moiseskerschner.mkformat
 
-/**
- * A non-blank line is a "parent" if its content ends with ':' (trailing
- * whitespace ignored) or if it ends with exactly one trailing space.
- */
 object MkParent {
+    private const val COLON_MARKER = ":"
+    private const val SPACE_MARKER = " "
+    private const val DOUBLE_SPACE = "  "
+
     fun isParent(line: CharSequence): Boolean {
-        val raw = line.trimEnd('\n', '\r')
-        if (raw.isBlank()) return false
-        return raw.trimEnd().endsWith(":") || (raw.endsWith(" ") && !raw.endsWith("  "))
+        val content = withoutLineBreak(line)
+        if (content.isBlank()) return false
+        return isColonMarkedParent(content) || isSpaceMarkedParent(content)
     }
 
-    /** The parent's label: the line trimmed, without the trailing ':' marker. */
+    fun isSpaceMarkedParent(line: CharSequence): Boolean {
+        val content = withoutLineBreak(line)
+        if (content.isBlank()) return false
+        return content.endsWith(SPACE_MARKER) && !content.endsWith(DOUBLE_SPACE)
+    }
+
     fun label(line: CharSequence): String {
         val trimmed = line.trim()
-        return (if (trimmed.endsWith(":")) trimmed.dropLast(1) else trimmed).trim().toString()
+        return trimmed.removeSuffix(COLON_MARKER).trim().toString()
     }
+
+    private fun isColonMarkedParent(content: CharSequence): Boolean =
+        content.trimEnd().endsWith(COLON_MARKER)
+
+    private fun withoutLineBreak(line: CharSequence): CharSequence = line.trimEnd('\n', '\r')
 }
