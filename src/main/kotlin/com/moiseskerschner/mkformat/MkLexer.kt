@@ -82,10 +82,34 @@ class MkLexer : LexerBase() {
     }
 
     private fun lexProseLine(lineText: String, depth: Int) {
-        tokenType = MkTokenTypes.DEPTHS[depth]
+        tokenType = proseTokenType(lineText, depth)
         if (MkParagraph.leavesParagraphOpen(lineText)) {
             nextTokenState = OPEN_PARAGRAPH_STATE_OFFSET + depth
         }
+    }
+
+    private fun proseTokenType(lineText: String, depth: Int): IElementType {
+        if (wrapsIntoParentLine(lineText, depth)) return MkTokenTypes.DEPTHS_PARENT[depth]
+        return MkTokenTypes.DEPTHS[depth]
+    }
+
+    private fun wrapsIntoParentLine(lineText: String, depth: Int): Boolean {
+        if (!MkParagraph.wrapsOntoNextLine(lineText)) return false
+        var lineStart = tokenEnd
+        while (lineStart < bufferEnd) {
+            val followingLine = buffer.subSequence(lineStart, endOfLine(lineStart)).toString()
+            if (!continuesSameParagraph(followingLine, depth)) return false
+            if (MkParent.isParent(followingLine)) return true
+            if (!MkParagraph.wrapsOntoNextLine(followingLine)) return false
+            lineStart = endOfLineIncludingBreak(lineStart)
+        }
+        return false
+    }
+
+    private fun continuesSameParagraph(lineText: String, depth: Int): Boolean {
+        if (lineText.isBlank()) return false
+        if (MkParagraph.startsNewItem(lineText)) return false
+        return depthOf(lineText) == depth
     }
 
     private fun labelLengthOutsideParagraph(lineText: String, depth: Int): Int? {

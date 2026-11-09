@@ -16,7 +16,13 @@ object MkInlineLabel {
     }
 
     private fun isTooLongForLabel(label: CharSequence): Boolean =
-        label.trim().split(WORD_SEPARATOR).size > MAX_LABEL_WORDS
+        wordsWithoutListMarker(label).size > MAX_LABEL_WORDS
+
+    private fun wordsWithoutListMarker(label: CharSequence): List<String> {
+        val words = label.trim().split(WORD_SEPARATOR)
+        if (MkParagraph.isListItemMarker(words.first())) return words.drop(1)
+        return words
+    }
 
     private fun firstSeparatorFollowedByWhitespace(line: CharSequence): Int? {
         for (index in 0 until line.length - 1) {
