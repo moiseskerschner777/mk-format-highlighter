@@ -5,6 +5,7 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.openapi.ui.popup.JBPopupFactory
@@ -103,10 +104,8 @@ class AddCommentInlineAction : AnAction() {
                                 val displayPath = MkCommentFormatter.getRelativePath(editor.project!!, vFile)
 val formatted = MkCommentFormatter.format(displayPath, vFile.name, manager.getComments())
                                 CopyPasteManager.getInstance().setContents(StringSelection(formatted))
-                                val terminalTabName = MkSessionHeader.terminalTabName(editor.document.text)
-                                val currentProject = editor.project
-                                if (terminalTabName != null && currentProject != null) {
-                                    MkClaudeTerminalSender.send(currentProject, terminalTabName, formatted)
+                                if (sendToClaudeSession(editor, formatted)) {
+                                    manager.clearAll()
                                 }
                             }
                             val project = editor.project
@@ -140,6 +139,12 @@ val formatted = MkCommentFormatter.format(displayPath, vFile.name, manager.getCo
         editor.caretModel.moveToOffset(selectionStart)
         popup.showInBestPositionFor(editor)
         editor.caretModel.moveToOffset(savedOffset)
+    }
+
+    private fun sendToClaudeSession(editor: Editor, formatted: String): Boolean {
+        val terminalTabName = MkSessionHeader.terminalTabName(editor.document.text) ?: return false
+        val project = editor.project ?: return false
+        return MkClaudeTerminalSender.send(project, terminalTabName, formatted)
     }
 
     private fun cleanupDispatcher() {
