@@ -103,6 +103,11 @@ class AddCommentInlineAction : AnAction() {
                                 val displayPath = MkCommentFormatter.getRelativePath(editor.project!!, vFile)
 val formatted = MkCommentFormatter.format(displayPath, vFile.name, manager.getComments())
                                 CopyPasteManager.getInstance().setContents(StringSelection(formatted))
+                                val terminalTabName = MkSessionHeader.terminalTabName(editor.document.text)
+                                val currentProject = editor.project
+                                if (terminalTabName != null && currentProject != null) {
+                                    MkClaudeTerminalSender.send(currentProject, terminalTabName, formatted)
+                                }
                             }
                             val project = editor.project
                             if (project != null) {

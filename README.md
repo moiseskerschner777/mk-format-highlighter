@@ -37,3 +37,13 @@ The plugin distribution (`mk-format-highlighter-1.0.0.zip`) will be produced at 
 2. In IntelliJ, go to **Settings > Plugins > Gear icon > Install Plugin from Disk...**
 3. Select `build/distributions/mk-format-highlighter-1.0.0.zip`
 4. Restart the IDE
+
+## Send comments to a running Claude session
+
+Put a header as the first non-blank line of the `.mk` file:
+
+    session: Notas sobre TCC
+
+The value is matched against the titles of the IDE terminal tabs (case-insensitive, "contains").
+
+When a comment is added (Enter in the comment popup), the formatted comments are still copied to the clipboard and, if the terminal tab is found, also pasted into it and submitted. Without the header, behavior is unchanged.
