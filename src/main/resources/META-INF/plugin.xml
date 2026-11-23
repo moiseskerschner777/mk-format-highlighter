@@ -5,7 +5,7 @@
     <description>Depth-colored syntax highlighting for mk-format (.mk) outline files, matching the mk-editor artifact's palette out of the box.</description>
 
     <depends>com.intellij.modules.platform</depends>
-    <depends>org.jetbrains.plugins.terminal</depends>
+    <depends optional="true">org.jetbrains.plugins.terminal</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <notificationGroup id="mk-format" displayType="BALLOON"/>
